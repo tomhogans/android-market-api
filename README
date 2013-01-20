@@ -1,0 +1,13 @@
+Simplified Android Market Client
+================================
+
+market.py defines the Market class.
+
+Market accepts an authentication token and Android device ID in its constructor
+to continue an existing session.  If your session expires, you should use the login()
+method to obtain a new authentication token (which will be set in self.auth_token after
+a successful login).
+
+The Market object exposes a single function, get_app_info, that accepts an application
+name and returns the App information along with the download URL and authorized cookies
+that must accompany the download request.
