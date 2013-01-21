@@ -11,3 +11,5 @@ a successful login).
 The Market object exposes a single function, get_app_info, that accepts an application
 name and returns the App information along with the download URL and authorized cookies
 that must accompany the download request.
+
+Protocol Buffers bindings (and market.proto) are from the http://code.google.com/p/android-market-api/ project.

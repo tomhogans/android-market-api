@@ -75,7 +75,7 @@ class Market(object):
         auth_results = dict([x.split('=') for x in resp.content.splitlines()])
         self.android_id = android_id
         self.auth_token = auth_results['Auth']
-        return True
+        return self.auth_token
 
     def get_app_info(self, query_string):
         """ Accepts a package name of a specific Android app (in com.*) format
