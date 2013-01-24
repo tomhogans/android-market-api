@@ -1,5 +1,6 @@
 import market_pb2
 import requests
+import urllib2
 import base64
 import zlib
 
@@ -107,3 +108,13 @@ class Market(object):
                 'cookie_name': asset.downloadAuthCookieName,
                 'cookie_value': asset.downloadAuthCookieValue,
                 }
+
+    def download(self, query_string, file_path):
+        app_info = self.get_app_info(query_string)
+        opener = urllib2.build_opener()
+        opener.addheaders.append(('Cookie', '{}={}'.format(
+            app_info['cookie_name'], app_info['cookie_value'])))
+        opener.addheaders.append(('User-Agent', 
+            'Android-Market/2 (sapphire PLAT-RC33); gzip'))
+        f = opener.open(app_info['download_url'])
+        open(file_path, 'w').write(f.read())
