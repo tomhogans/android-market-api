@@ -1,0 +1,7 @@
+{
+"host": "crawlerdb", 
+"port": 3306, 
+"username": "scraper", 
+"password": "mypass", 
+"database": "scraper4"
+}
