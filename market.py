@@ -97,12 +97,14 @@ class Market(object):
         # Only get the part of the response we're interested in
         app = response.responsegroup[0].appsResponse.app[0]
         asset = response.responsegroup[1].getAssetResponse.installasset[0]
+
         return {
                 'id': asset.assetId,
                 'creator': app.creatorId,
                 'name': asset.assetName,
                 'package': asset.assetPackage,
-                'version': app.version,
+                'version': app.versionCode,
+                'version_string': app.version,
                 'rating': app.rating,
                 'ratings_count': app.ratingsCount,
                 'file_size': asset.assetSize,
