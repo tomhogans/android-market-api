@@ -125,6 +125,6 @@ class Market(object):
         # If save_as path is not defined, save to local path using package name
         # as the filename.
         if not save_as:
-            save_as = "{}.apk".format(save_as)
+            save_as = "{}.apk".format(query_string)
         open(save_as, 'w').write(f.read())
         return app_info
