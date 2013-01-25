@@ -111,7 +111,10 @@ class Market(object):
                 'cookie_value': asset.downloadAuthCookieValue,
                 }
 
-    def download(self, query_string, save_as):
+    def download(self, query_string, save_as=None):
+        """ Wrapper around get_app_info method that will download the APK file
+        to the path specified in save_as (or uses com.package.apk as default).
+        Returns results of get_app_info method when successful. """
         app_info = self.get_app_info(query_string)
         opener = urllib2.build_opener()
         opener.addheaders.append(('Cookie', '{}={}'.format(
@@ -119,4 +122,9 @@ class Market(object):
         opener.addheaders.append(('User-Agent', 
             'Android-Market/2 (sapphire PLAT-RC33); gzip'))
         f = opener.open(app_info['download_url'])
+        # If save_as path is not defined, save to local path using package name
+        # as the filename.
+        if not save_as:
+            save_as = "{}.apk".format(save_as)
         open(save_as, 'w').write(f.read())
+        return app_info
