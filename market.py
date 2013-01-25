@@ -1,5 +1,5 @@
 import market_pb2
-import requests
+import urllib
 import urllib2
 import base64
 import zlib
@@ -56,8 +56,9 @@ class Market(object):
                 'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.7',
                 'Cookie': 'ANDROIDSECURE={}'.format(self.auth_token),
                 }
-        resp = requests.post(API_URL, params, headers=headers, verify=False)
-        ungzipped_content = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+        httpreq = urllib2.Request(API_URL, urllib.urlencode(params), headers)
+        content = urllib2.urlopen(httpreq).read()
+        ungzipped_content = zlib.decompress(content, 16 + zlib.MAX_WBITS)
         response = market_pb2.Response.FromString(ungzipped_content)
         return response
 
@@ -72,8 +73,9 @@ class Market(object):
         headers = {
                 'User-Agent': 'Android-Market/2 (sapphire PLAT-RC33); gzip',
                 }
-        resp = requests.post(LOGIN_URL, params, headers=headers)
-        auth_results = dict([x.split('=') for x in resp.content.splitlines()])
+        httpreq = urllib2.Request(LOGIN_URL, urllib.urlencode(params), headers)
+        content = urllib2.urlopen(httpreq).read()
+        auth_results = dict([x.split('=') for x in content.splitlines()])
         self.android_id = android_id
         self.auth_token = auth_results['Auth']
         return self.auth_token
@@ -109,7 +111,7 @@ class Market(object):
                 'cookie_value': asset.downloadAuthCookieValue,
                 }
 
-    def download(self, query_string, file_path):
+    def download(self, query_string, save_as):
         app_info = self.get_app_info(query_string)
         opener = urllib2.build_opener()
         opener.addheaders.append(('Cookie', '{}={}'.format(
@@ -117,4 +119,4 @@ class Market(object):
         opener.addheaders.append(('User-Agent', 
             'Android-Market/2 (sapphire PLAT-RC33); gzip'))
         f = opener.open(app_info['download_url'])
-        open(file_path, 'w').write(f.read())
+        open(save_as, 'w').write(f.read())
