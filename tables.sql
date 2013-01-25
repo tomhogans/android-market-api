@@ -15,11 +15,10 @@ CREATE TABLE apk_apps (
         id INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
         package VARCHAR(1024) NOT NULL,
         title VARCHAR(1024) NOT NULL,
-        version VARCHAR(16) NOT NULL,
+        last_version VARCHAR(16) NOT NULL,
         last_fetched DATETIME NOT NULL,
         created_at DATETIME NOT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY (package)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 
