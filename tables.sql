@@ -3,6 +3,8 @@ CREATE TABLE apk_accounts (
         username VARCHAR(64) NOT NULL,
         password VARCHAR(32) NOT NULL,
         android_id VARCHAR(32) NOT NULL,
+        auth_token VARCHAR(1024) NOT NULL,
+        disabled TINYINT(1) DEFAULT 0,
         logins INT(11) UNSIGNED DEFAULT 0,
         downloads INT(11) UNSIGNED DEFAULT 0,
         last_used DATETIME NOT NULL,
