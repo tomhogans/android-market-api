@@ -16,6 +16,8 @@ USER_COUNTRY = "us"
 
 
 class NotAuthenticatedException(Exception): pass
+class LoginException(Exception): pass
+class UnknownResponseException(Exception): pass
 
 
 class Market(object):
