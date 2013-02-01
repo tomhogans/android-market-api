@@ -8,6 +8,7 @@ CREATE TABLE apk_accounts (
         logins INT(11) UNSIGNED DEFAULT 0,
         downloads INT(11) UNSIGNED DEFAULT 0,
         last_used DATETIME NOT NULL,
+        last_login DATETIME NOT NULL,
         created_at DATETIME NOT NULL,
         PRIMARY KEY (id),
         UNIQUE KEY (username)

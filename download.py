@@ -45,7 +45,7 @@ def main():
         # Update account/app records to mark as used
         next_app.last_fetched = datetime.datetime.now()
         next_account.last_used = datetime.datetime.now()
-        DB.flush()
+        DB.commit()
 
         # Retrieve actual app data 
         app_info = fetch_app(next_app, next_account)
@@ -58,7 +58,7 @@ def main():
         if not next_app.initial_version:
             next_app.initial_version = app_info['version']
         next_account.downloads += 1
-        DB.flush()
+        DB.commit()
 
 
 if __name__ == '__main__':
