@@ -1,10 +1,20 @@
 from sqlsoup import SQLSoup
 import json
 import time
+import os
+import boto
+from boto.s3.key import Key
 import market
+
+
+class AlreadyFetchedException(Exception): pass
+
 
 config = json.load(open("config.json", 'r'))
 
+S3 = boto.connect_s3(config['s3_access_key'], 
+        config['s3_access_secret'])
+Bucket = S3.get_bucket("wrw_apks")
 DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'], 
     config['password'], config['host'], config['port'], config['database']))
 
@@ -12,11 +22,27 @@ DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'],
 def fetch_app(app, account):
     m = market.Market(account.auth_token, account.android_id)
     app_info = m.get_app_info(app.package)
-    m.download(app_info, "{}/{}.apk".format(config['apk_path'], app.package))
+    # TODO: compare app.version < app_info['version'], if so skip download
+    file_name = "{}/{}.apk".format(config['apk_path'], app.package)
+    m.download(app_info, file_name)
+
+    s3_key = Key(S3_Bucket)
+    s3_key.key = file_name
+    s3_key.set_contents_from_filename(file_name)
+    s3_key.make_public()
+
+    os.remove(file_name)
+
     return app_info
 
 def main():
     print("APK Downloader started")
+
+    if not os.path.exists("./{}".format(config['apk_path'])):
+        os.makedirs("./{}".format(config['apk_path']))
+
+    return
+
     while True:
         next_app = DB.apk_apps.filter("""
             last_fetched = 0
