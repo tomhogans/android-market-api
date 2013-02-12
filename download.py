@@ -1,5 +1,6 @@
 from sqlsoup import SQLSoup
 import json
+import datetime
 import time
 import os
 import boto
@@ -14,7 +15,7 @@ config = json.load(open("config.json", 'r'))
 
 S3 = boto.connect_s3(config['s3_access_key'], 
         config['s3_access_secret'])
-Bucket = S3.get_bucket("wrw_apks")
+S3_Bucket = S3.get_bucket("wrw_apks")
 DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'], 
     config['password'], config['host'], config['port'], config['database']))
 
@@ -41,8 +42,6 @@ def main():
     if not os.path.exists("./{}".format(config['apk_path'])):
         os.makedirs("./{}".format(config['apk_path']))
 
-    return
-
     while True:
         next_app = DB.apk_apps.filter("""
             last_fetched = 0
@@ -54,8 +53,6 @@ def main():
             print("No apps ready for download")
             time.sleep(1)
             continue
-
-        print next_app
 
         next_account = DB.apk_accounts.filter("""
             (TIMEDIFF(NOW(), last_used) > TIME('00:01:00') OR last_used = 0)
@@ -74,18 +71,30 @@ def main():
         DB.commit()
 
         # Retrieve actual app data 
-        app_info = fetch_app(next_app, next_account)
+        try:
+            app_info = fetch_app(next_app, next_account)
+            # Update records with retrieved app info
+            next_app.title = app_info['name']
+            next_app.author = app_info['creator']
+            next_app.ratings_count = app_info['ratings_count']
+            next_app.last_version = app_info['version']
+            if not next_app.initial_version:
+                next_app.initial_version = app_info['version']
+            next_account.downloads += 1
 
-        # Update records with retrieved app info
-        next_app.title = app_info['title']
-        next_app.author = app_info['author']
-        next_app.ratings_count = app_info['ratings_count']
-        next_app.last_version = app_info['version']
-        if not next_app.initial_version:
-            next_app.initial_version = app_info['version']
-        next_account.downloads += 1
+        except market.NotAuthenticatedException, e:
+            print "Not authenticated"
+            next_account.auth_token = ''
+
+        except market.SearchException, e:
+            print "Search exception"
+            # Mark app as not found in DB
+            pass
+
         DB.commit()
 
+        print ("Done, sleeping")
+        time.sleep(5)
 
 if __name__ == '__main__':
     main()

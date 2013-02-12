@@ -17,6 +17,7 @@ USER_COUNTRY = "us"
 
 class NotAuthenticatedException(Exception): pass
 class LoginException(Exception): pass
+class SearchException(Exception): pass
 class UnknownResponseException(Exception): pass
 
 
@@ -86,6 +87,7 @@ class Market(object):
         """ Accepts a package name of a specific Android app (in com.*) format
         and returns useful package info and download links as a dict. """
         request = self.__prepare_request()
+
         # Create RequestGroup for AppsRequest
         reqgroup = request.requestgroup.add()
         reqgroup.appsRequest.query = query_string
@@ -95,10 +97,21 @@ class Market(object):
         # Create RequestGroup for GetAssetRequest
         reqgroup = request.requestgroup.add()
         reqgroup.getAssetRequest.assetId = query_string
-        response = self.__send_proto(request)
-        # Only get the part of the response we're interested in
-        app = response.responsegroup[0].appsResponse.app[0]
-        asset = response.responsegroup[1].getAssetResponse.installasset[0]
+
+        try:
+            response = self.__send_proto(request)
+            # Only get the part of the response we're interested in
+            app = response.responsegroup[0].appsResponse.app[0]
+            asset = response.responsegroup[1].getAssetResponse.installasset[0]
+        except urllib2.HTTPError, e:
+            if e.code == 400:
+                raise SearchException("Package not found")
+            elif e.code == 403:
+                raise NotAuthenticatedException("")
+            else:
+                raise
+        except IndexError, e:
+            raise SearchException("Package not found")
 
         return {
                 'id': asset.assetId,
