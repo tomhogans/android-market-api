@@ -23,7 +23,12 @@ DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'],
 def fetch_app(app, account):
     m = market.Market(account.auth_token, account.android_id)
     app_info = m.get_app_info(app.package)
-    # TODO: compare app.version < app_info['version'], if so skip download
+
+    if app.last_version >= int(app_info['version']):
+        # Don't bother downloading if the version hasn't changed
+        print("last_version < app_info[version]")
+        return app_info
+
     file_name = "{}/{}.apk".format(config['apk_path'], app.package)
     m.download(app_info, file_name)
 
@@ -83,18 +88,16 @@ def main():
             next_account.downloads += 1
 
         except market.NotAuthenticatedException, e:
-            print "Not authenticated"
+            # Force this account to login again
             next_account.auth_token = ''
 
         except market.SearchException, e:
-            print "Search exception"
-            # Mark app as not found in DB
-            pass
+            # Mark package as not found
+            next_app.not_found = True
 
         DB.commit()
 
-        print ("Done, sleeping")
-        time.sleep(5)
+        time.sleep(1)
 
 if __name__ == '__main__':
     main()
