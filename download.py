@@ -1,10 +1,14 @@
-from sqlsoup import SQLSoup
 import json
 import datetime
+import logging
 import time
 import os
-import boto
+import sys
+
+from sqlsoup import SQLSoup
 from boto.s3.key import Key
+import boto
+
 import market
 
 
@@ -12,6 +16,7 @@ class AlreadyFetchedException(Exception): pass
 
 
 config = json.load(open("config.json", 'r'))
+logging.basicConfig(filename='downloader.log', level=logging.DEBUG)
 
 S3 = boto.connect_s3(config['s3_access_key'], 
         config['s3_access_secret'])
@@ -26,26 +31,35 @@ def fetch_app(app, account):
 
     if app.last_version >= int(app_info['version']):
         # Don't bother downloading if the version hasn't changed
-        print("last_version < app_info[version]")
+        logging.debug("App {} already up to date, skip download".format(
+            app.package))
         return app_info
 
     file_name = "{}/{}.apk".format(config['apk_path'], app.package)
     m.download(app_info, file_name)
+    logging.debug("Downloaded {} to {}".format(app.package, file_name))
 
     s3_key = Key(S3_Bucket)
     s3_key.key = file_name
     s3_key.set_contents_from_filename(file_name)
     s3_key.make_public()
+    logging.debug("Put {} to S3".format(file_name))
 
     os.remove(file_name)
+    logging.debug("Removing local file {}".format(file_name))
 
     return app_info
 
 def main():
-    print("APK Downloader started")
+    logging.info("APK Downloader started")
 
     if not os.path.exists("./{}".format(config['apk_path'])):
+        logging.info("Creating download path for APKs: {}".format(
+            config['apk_path']))
         os.makedirs("./{}".format(config['apk_path']))
+    else:
+        logging.info("Path for APKs already exists: {}".format(
+            config['apk_path']))
 
     while True:
         next_app = DB.apk_apps.filter("""
@@ -55,7 +69,6 @@ def main():
         """).order_by("last_fetched ASC").first()
 
         if not next_app:
-            print("No apps ready for download")
             time.sleep(1)
             continue
 
@@ -66,7 +79,6 @@ def main():
         """).order_by("last_used ASC").first()
 
         if not next_account:
-            print("No accounts available")
             time.sleep(1)
             continue
 
@@ -86,18 +98,21 @@ def main():
             if not next_app.initial_version:
                 next_app.initial_version = app_info['version']
             next_account.downloads += 1
+            logging.debug("Updated DB info for {}".format(next_app.package))
 
         except market.NotAuthenticatedException, e:
             # Force this account to login again
             next_account.auth_token = ''
+            logging.warn("Request by {} failed, not authenticated".format(
+                next_account.username))
 
         except market.SearchException, e:
             # Mark package as not found
             next_app.not_found = True
+            logging.warn("Package {} not found".format(next_app.package))
 
         DB.commit()
 
-        time.sleep(1)
 
 if __name__ == '__main__':
     main()

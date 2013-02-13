@@ -1,4 +1,5 @@
 *.pyc
 *.txt
+*.log
 *.apk
 config.json
