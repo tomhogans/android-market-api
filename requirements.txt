@@ -1,2 +1,3 @@
 sqlsoup
 boto
+protobuf
