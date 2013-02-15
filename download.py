@@ -22,8 +22,9 @@ logging.getLogger('boto').setLevel(logging.CRITICAL)
 S3 = boto.connect_s3(config['s3_access_key'], 
         config['s3_access_secret'])
 S3_Bucket = S3.get_bucket("wrw_apks")
-DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'], 
-    config['password'], config['host'], config['port'], config['database']))
+DB = SQLSoup("mysql://{}:{}@{}:{}/{}?charset=utf8&use_unicode=0".format(
+    config['username'], config['password'], config['host'], config['port'], 
+    config['database']))
 
 
 def fetch_app(app, account):
