@@ -1,7 +1,10 @@
 {
-"host": "crawlerdb", 
+"host": "mysql", 
 "port": 3306, 
-"username": "scraper", 
-"password": "mypass", 
-"database": "scraper4"
+"username": "",
+"password": "", 
+"database": "",
+"apk_path": "apks",
+"s3_access_key": "",
+"s3_access_secret": ""
 }
