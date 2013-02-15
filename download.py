@@ -17,6 +17,7 @@ class AlreadyFetchedException(Exception): pass
 
 config = json.load(open("config.json", 'r'))
 logging.basicConfig(filename='downloader.log', level=logging.DEBUG)
+logging.getLogger('boto').setLevel(logging.CRITICAL)
 
 S3 = boto.connect_s3(config['s3_access_key'], 
         config['s3_access_secret'])
@@ -26,6 +27,7 @@ DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'],
 
 
 def fetch_app(app, account):
+    logging.debug("Getting app info for {}".format(app.package))
     m = market.Market(account.auth_token, account.android_id)
     app_info = m.get_app_info(app.package)
 
@@ -62,6 +64,7 @@ def main():
             config['apk_path']))
 
     while True:
+        logging.debug("Fetching next app...")
         next_app = DB.apk_apps.filter("""
             last_fetched = 0
             OR
@@ -72,6 +75,7 @@ def main():
             time.sleep(1)
             continue
 
+        logging.debug("Fetching next account...")
         next_account = DB.apk_accounts.filter("""
             (TIMEDIFF(NOW(), last_used) > TIME('00:01:00') OR last_used = 0)
             AND
@@ -82,10 +86,16 @@ def main():
             time.sleep(1)
             continue
 
+        logging.debug("-"*20)
+        logging.debug("Using {} to retrieve {}".format(next_account.username,
+            next_app.package))
+
         # Update account/app records to mark as used
         next_app.last_fetched = datetime.datetime.now()
         next_account.last_used = datetime.datetime.now()
         DB.commit()
+
+        logging.debug("Took app and account out of queue for processing")
 
         # Retrieve actual app data 
         try:
@@ -98,7 +108,7 @@ def main():
             if not next_app.initial_version:
                 next_app.initial_version = app_info['version']
             next_account.downloads += 1
-            logging.debug("Updated DB info for {}".format(next_app.package))
+            logging.debug("Updating DB info for {}".format(next_app.package))
 
         except market.NotAuthenticatedException, e:
             # Force this account to login again
@@ -111,7 +121,15 @@ def main():
             next_app.not_found = True
             logging.warn("Package {} not found".format(next_app.package))
 
+        except Exception, e:
+            logging.critical("App {} raised exception {}".format(
+                next_app.package, e))
+            logging.critical("Account: {} ({})".format(next_account.username,
+                next_account.id))
+
         DB.commit()
+
+        logging.debug("Finished working with {}".format(next_app.package))
 
 
 if __name__ == '__main__':
