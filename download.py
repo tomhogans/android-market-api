@@ -8,6 +8,7 @@ import sys
 from sqlsoup import SQLSoup
 from boto.s3.key import Key
 import boto
+import pytz
 
 import market
 
@@ -93,8 +94,8 @@ def main():
             next_app.package))
 
         # Update account/app records to mark as used
-        next_app.last_fetched = datetime.datetime.now()
-        next_account.last_used = datetime.datetime.now()
+        next_app.last_fetched = datetime.datetime.now(tz=pytz.timezone("US/Eastern"))
+        next_account.last_used = datetime.datetime.now(tz=pytz.timezone("US/Eastern"))
         DB.commit()
 
         logging.debug("Took app and account out of queue for processing")
