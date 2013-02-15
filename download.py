@@ -53,6 +53,7 @@ def fetch_app(app, account):
 
     return app_info
 
+
 def main():
     logging.info("APK Downloader started")
 
@@ -78,7 +79,7 @@ def main():
 
         logging.debug("Fetching next account...")
         next_account = DB.apk_accounts.filter("""
-            (TIMEDIFF(NOW(), last_used) > TIME('00:01:00') OR last_used = 0)
+            (TIMEDIFF(NOW(), last_used) > TIME('00:00:10') OR last_used = 0)
             AND
             auth_token != ''
         """).order_by("last_used ASC").first()
