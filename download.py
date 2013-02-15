@@ -128,7 +128,17 @@ def main():
             logging.critical("Account: {} ({})".format(next_account.username,
                 next_account.id))
 
-        DB.commit()
+        try:
+            DB.commit()
+        except:
+            logging.critical("App {} raised exception {}".format(
+                next_app.package, e))
+            logging.critical("Account: {} ({})".format(next_account.username,
+                next_account.id))
+
+            next_app.title = "error"
+            next_app.author = "error"
+            DB.commit()
 
         logging.debug("Finished working with {}".format(next_app.package))
 
