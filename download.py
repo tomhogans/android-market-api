@@ -1,6 +1,8 @@
 import json
 import datetime
 import logging
+import requests
+import urllib
 import time
 import os
 import sys
@@ -17,28 +19,37 @@ class AlreadyFetchedException(Exception): pass
 config = json.load(open("config.json", 'r'))
 logging.basicConfig(filename='downloader.log', level=logging.DEBUG)
 logging.getLogger('boto').setLevel(logging.CRITICAL)
+logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(
+        logging.CRITICAL)
 
 S3 = boto.connect_s3(config['s3_access_key'], 
         config['s3_access_secret'])
 S3_Bucket = S3.get_bucket("wrw_apks")
 
 
+def send_req(params):
+    """ Sends request to HTTP endpoint with params as urlencoded params """
+    url = "{}?{}".format(config['endpoint'], urllib.urlencode(params))
+    resp = requests.get(url, auth=(config['username'], config['password']))
+    try:
+        data = json.loads(resp.content)
+        return data
+    except Exception, e:
+        return {}
+
+
 def get_next_work_item():
     """ Requests an APK to fetch and an account to fetch it with """
-    return None
+    return send_req({'next': 'true'})
 
-
-def update_app_info(app_info):
-    # title, author, ratings, last_version, initial_version
-    # downloads+1
-    pass
 
 def fetch_app(app, account):
     logging.debug("Getting app info for {}".format(app['package']))
     m = market.Market(account['auth_token'], account['android_id'])
     app_info = m.get_app_info(app['package'])
 
-    if app['last_version'] >= int(app_info['version']):
+
+    if int(app['last_version']) >= int(app_info['version']):
         # Don't bother downloading if the version hasn't changed
         logging.debug("App {} already up to date, skip download".format(
             app['package']))
@@ -78,7 +89,7 @@ def main():
             continue
 
         next_app = work_item['app']
-        next_account = work_itemp['account']
+        next_account = work_item['account']
 
         logging.debug("-"*20)
         logging.debug("Using {} to retrieve {}".format(
@@ -86,39 +97,37 @@ def main():
 
         try:
             app_info = fetch_app(next_app, next_account)
-            update_app_info(app_info)
-            logging.debug("Updating DB info for {}".format(next_app.package))
+            send_req({
+                'update': app_info['package'],
+                'title': app_info['name'].encode('ascii', 'ignore'),
+                'author': app_info['creator'].encode('ascii', 'ignore'),
+                'version': app_info['version'],
+                'ratings_count': app_info['ratings_count'],
+            })
+            logging.debug("Updating DB info for {}".format(next_app['package']))
 
         except market.NotAuthenticatedException, e:
             # Force this account to login again
-            next_account.auth_token = ''
+            send_req({'loginfailed': next_account['username']})
             logging.warn("Request by {} failed, not authenticated".format(
-                next_account.username))
+                next_account['username']))
 
         except market.SearchException, e:
             # Mark package as not found
-            next_app.not_found = True
-            logging.warn("Package {} not found".format(next_app.package))
+            send_req({'notfound': next_app['package']})
+            logging.warn("Package {} not found".format(next_app['package']))
+
+        except market.RateLimitException, e:
+            logging.warn("Hit rate limit!  Pausing for 5 minutes...")
+            time.sleep(300)
 
         except Exception, e:
             logging.critical("App {} raised exception {}".format(
-                next_app.package, e))
-            logging.critical("Account: {} ({})".format(next_account.username,
-                next_account.id))
+                next_app['package'], e))
+            logging.critical("Account: {} ({})".format(
+                next_account['username'], next_account['id']))
 
-        try:
-            DB.commit()
-        except:
-            logging.critical("App {} raised exception {}".format(
-                next_app.package, e))
-            logging.critical("Account: {} ({})".format(next_account.username,
-                next_account.id))
-
-            next_app.title = "error"
-            next_app.author = "error"
-            DB.commit()
-
-        logging.debug("Finished working with {}".format(next_app.package))
+        logging.debug("Finished working with {}".format(next_app['package']))
 
 
 if __name__ == '__main__':

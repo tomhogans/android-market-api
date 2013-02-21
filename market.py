@@ -18,6 +18,7 @@ USER_COUNTRY = "us"
 class NotAuthenticatedException(Exception): pass
 class LoginException(Exception): pass
 class SearchException(Exception): pass
+class RateLimitException(Exception): pass
 class UnknownResponseException(Exception): pass
 
 
@@ -108,6 +109,8 @@ class Market(object):
                 raise SearchException("Package not found")
             elif e.code == 403:
                 raise NotAuthenticatedException("")
+            elif e.code == 429:
+                raise RateLimitException("")
             else:
                 raise
         except IndexError, e:

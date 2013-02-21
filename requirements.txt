@@ -1,4 +1,3 @@
-sqlsoup
+requests
 boto
 protobuf
-pytz
