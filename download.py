@@ -83,19 +83,19 @@ def main():
             config['apk_path']))
 
     while True:
-        work_item = get_next_work_item()
-        if not work_item:
-            time.sleep(1)
-            continue
-
-        next_app = work_item['app']
-        next_account = work_item['account']
-
-        logging.debug("-"*20)
-        logging.debug("Using {} to retrieve {}".format(
-            next_account['username'], next_app['package']))
-
         try:
+            work_item = get_next_work_item()
+            if not work_item:
+                time.sleep(1)
+                continue
+
+            next_app = work_item['app']
+            next_account = work_item['account']
+
+            logging.debug("-"*20)
+            logging.debug("Using {} to retrieve {}".format(
+                next_account['username'], next_app['package']))
+
             app_info = fetch_app(next_app, next_account)
             send_req({
                 'update': app_info['package'],
@@ -123,7 +123,7 @@ def main():
 
         except Exception, e:
             logging.critical("App {} raised exception {}".format(
-                next_app['package'], e))
+                next_app['package'].encode('ascii', 'ignore'), e))
             logging.critical("Account: {} ({})".format(
                 next_account['username'], next_account['id']))
 
