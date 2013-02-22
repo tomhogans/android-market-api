@@ -127,7 +127,7 @@ def main():
             logging.critical("Account: {} ({})".format(
                 next_account['username'], next_account['id']))
 
-        time.sleep(2)
+        time.sleep(config['pause'])
         logging.debug("Finished working with {}".format(next_app['package']))
 
 
