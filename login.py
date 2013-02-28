@@ -6,8 +6,8 @@ import market
 
 config = json.load(open("config.json", 'r'))
 
-DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['username'], 
-    config['password'], config['host'], config['port'], config['database']))
+DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['db_user'], 
+    config['db_pass'], config['db_host'], config['db_port'], config['db_name']))
 
 
 def main():
