@@ -85,8 +85,7 @@ def main():
     try:
         work_item = get_next_work_item()
         if not work_item:
-            time.sleep(1)
-            continue
+            return
 
         next_app = work_item['app']
         next_account = work_item['account']
@@ -118,7 +117,6 @@ def main():
 
     except market.RateLimitException, e:
         logging.warn("Hit rate limit!  Pausing for 5 minutes...")
-        time.sleep(300)
 
     except Exception, e:
         logging.critical("App {} raised exception {}".format(
@@ -126,8 +124,6 @@ def main():
         logging.critical("Account: {} ({})".format(
             next_account['username'], next_account['id']))
 
-    logging.debug("Pausing for {} seconds...".format(config['pause']))
-    time.sleep(int(config['pause']))
     logging.debug("Finished working with {}".format(
         next_app['package'].encode('ascii', 'ignore')))
 
