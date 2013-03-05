@@ -15,9 +15,9 @@ import market
 
 class AlreadyFetchedException(Exception): pass
 
-
-config = json.load(open("config.json", 'r'))
-logging.basicConfig(filename='downloader.log', level=logging.DEBUG)
+script_path = os.path.dirname(os.path.realpath(__file__))
+config = json.load(open(script_path+"/config.json", 'r'))
+logging.basicConfig(filename=script_path+'/downloader.log', level=logging.DEBUG)
 logging.getLogger('boto').setLevel(logging.CRITICAL)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(
         logging.CRITICAL)
@@ -55,7 +55,8 @@ def fetch_app(app, account):
             app['package']))
         return app_info
 
-    file_name = "{}/{}.apk".format(config['apk_path'], app['package'])
+    file_name = "{}/{}/{}.apk".format(
+            script_path, config['apk_path'], app['package'])
     m.download(app_info, file_name)
     logging.debug("Downloaded {} to {}".format(app['package'], file_name))
 
@@ -74,10 +75,10 @@ def fetch_app(app, account):
 def main():
     logging.info("APK Downloader started")
 
-    if not os.path.exists("./{}".format(config['apk_path'])):
+    if not os.path.exists(script_path+"/{}".format(config['apk_path'])):
         logging.info("Creating download path for APKs: {}".format(
             config['apk_path']))
-        os.makedirs("./{}".format(config['apk_path']))
+        os.makedirs(script_path+"/{}".format(config['apk_path']))
     else:
         logging.info("Path for APKs already exists: {}".format(
             config['apk_path']))
