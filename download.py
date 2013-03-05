@@ -82,55 +82,54 @@ def main():
         logging.info("Path for APKs already exists: {}".format(
             config['apk_path']))
 
-    while True:
-        try:
-            work_item = get_next_work_item()
-            if not work_item:
-                time.sleep(1)
-                continue
+    try:
+        work_item = get_next_work_item()
+        if not work_item:
+            time.sleep(1)
+            continue
 
-            next_app = work_item['app']
-            next_account = work_item['account']
+        next_app = work_item['app']
+        next_account = work_item['account']
 
-            logging.debug("-"*20)
-            logging.debug("Using {} to retrieve {}".format(
-                next_account['username'], next_app['package']))
+        logging.debug("-"*20)
+        logging.debug("Using {} to retrieve {}".format(
+            next_account['username'], next_app['package']))
 
-            app_info = fetch_app(next_app, next_account)
-            send_req({
-                'update': app_info['package'],
-                'title': app_info['name'].encode('ascii', 'ignore'),
-                'author': app_info['creator'].encode('ascii', 'ignore'),
-                'version': app_info['version'],
-                'ratings_count': app_info['ratings_count'],
-            })
-            logging.debug("Updating DB info for {}".format(next_app['package']))
+        app_info = fetch_app(next_app, next_account)
+        send_req({
+            'update': app_info['package'],
+            'title': app_info['name'].encode('ascii', 'ignore'),
+            'author': app_info['creator'].encode('ascii', 'ignore'),
+            'version': app_info['version'],
+            'ratings_count': app_info['ratings_count'],
+        })
+        logging.debug("Updating DB info for {}".format(next_app['package']))
 
-        except market.NotAuthenticatedException, e:
-            # Force this account to login again
-            send_req({'loginfailed': next_account['username']})
-            logging.warn("Request by {} failed, not authenticated".format(
-                next_account['username']))
+    except market.NotAuthenticatedException, e:
+        # Force this account to login again
+        send_req({'loginfailed': next_account['username']})
+        logging.warn("Request by {} failed, not authenticated".format(
+            next_account['username']))
 
-        except market.SearchException, e:
-            # Mark package as not found
-            send_req({'notfound': next_app['package']})
-            logging.warn("Package {} not found".format(next_app['package']))
+    except market.SearchException, e:
+        # Mark package as not found
+        send_req({'notfound': next_app['package']})
+        logging.warn("Package {} not found".format(next_app['package']))
 
-        except market.RateLimitException, e:
-            logging.warn("Hit rate limit!  Pausing for 5 minutes...")
-            time.sleep(300)
+    except market.RateLimitException, e:
+        logging.warn("Hit rate limit!  Pausing for 5 minutes...")
+        time.sleep(300)
 
-        except Exception, e:
-            logging.critical("App {} raised exception {}".format(
-                next_app['package'].encode('ascii', 'ignore'), e))
-            logging.critical("Account: {} ({})".format(
-                next_account['username'], next_account['id']))
+    except Exception, e:
+        logging.critical("App {} raised exception {}".format(
+            next_app['package'].encode('ascii', 'ignore'), e))
+        logging.critical("Account: {} ({})".format(
+            next_account['username'], next_account['id']))
 
-        logging.debug("Pausing for {} seconds...".format(config['pause']))
-        time.sleep(int(config['pause']))
-        logging.debug("Finished working with {}".format(
-            next_app['package'].encode('ascii', 'ignore')))
+    logging.debug("Pausing for {} seconds...".format(config['pause']))
+    time.sleep(int(config['pause']))
+    logging.debug("Finished working with {}".format(
+        next_app['package'].encode('ascii', 'ignore')))
 
 
 if __name__ == '__main__':
