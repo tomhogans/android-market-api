@@ -127,8 +127,10 @@ def main():
             logging.critical("Account: {} ({})".format(
                 next_account['username'], next_account['id']))
 
-        time.sleep(config['pause'])
-        logging.debug("Finished working with {}".format(next_app['package']))
+        logging.debug("Pausing for {} seconds...".format(config['pause']))
+        time.sleep(int(config['pause']))
+        logging.debug("Finished working with {}".format(
+            next_app['package'].encode('ascii', 'ignore')))
 
 
 if __name__ == '__main__':
