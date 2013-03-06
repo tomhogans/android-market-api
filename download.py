@@ -125,8 +125,9 @@ def main():
         logging.critical("Account: {} ({})".format(
             next_account['username'], next_account['id']))
 
-    logging.debug("Finished working with {}".format(
-        next_app['package'].encode('ascii', 'ignore')))
+    logging.debug("Finished working with {} at {}".format(
+        next_app['package'].encode('ascii', 'ignore'), 
+        datetime.datetime.now()))
 
 
 if __name__ == '__main__':
