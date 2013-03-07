@@ -55,16 +55,22 @@ def fetch_app(app, account):
             app['package']))
         return app_info
 
-    file_name = "{}/{}/{}.apk".format(
-            script_path, config['apk_path'], app['package'])
+    s3_path = "{}/{}.apk".format(config['apk_path'], app['package'])
+    file_name = "{}/{}".format(script_path, s3_path)
     m.download(app_info, file_name)
     logging.debug("Downloaded {} to {}".format(app['package'], file_name))
 
     s3_key = Key(S3_Bucket)
-    s3_key.key = file_name
+    s3_key.key = s3_path
     s3_key.set_contents_from_filename(file_name)
     s3_key.make_public()
-    logging.debug("Put {} to S3".format(file_name))
+    logging.debug("Put {} to S3".format(s3_path))
+
+    s3_key = S3_Bucket.get_key(s3_path)
+    if s3_key:
+        logging.debug("S3 Upload Verified: {}".format(s3_path))
+    else:
+        logging.warn("S3 Upload Failed: {}".format(s3_path))
 
     os.remove(file_name)
     logging.debug("Removing local file {}".format(file_name))
