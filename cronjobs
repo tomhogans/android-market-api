@@ -1,0 +1,2 @@
+* * * * * python /home/ubuntu/apk-downloader/download.py
+* * * * * python /home/ubuntu/apk-downloader/login.py
