@@ -35,5 +35,5 @@ def clearlogs():
 
 def update():
     run("cd ~/apk-downloader/; git pull")
-    put("newconfig.json", "~/apk-downloader/")
+    put("newconfig.json", "~/apk-downloader/config.json")
 
