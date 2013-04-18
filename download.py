@@ -75,6 +75,11 @@ def fetch_app(app, account):
     os.remove(file_name)
     logging.debug("Removing local file {}".format(file_name))
 
+    notify_url = "{}{}".format(config['notify_url'], app['package'])
+    requests.get(notify_url, 
+            auth=(config['notify_user'], config['notify_pass']))
+    logging.debug("Hitting {}".format(notify_url))
+
     return app_info
 
 
