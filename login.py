@@ -3,8 +3,11 @@ import datetime
 import json
 import time
 import market
+import os
 
-config = json.load(open("config.json", 'r'))
+
+script_path = os.path.dirname(os.path.realpath(__file__))
+config = json.load(open(script_path+"/config.json", 'r'))
 
 DB = SQLSoup("mysql://{}:{}@{}:{}/{}".format(config['db_user'], 
     config['db_pass'], config['db_host'], config['db_port'], config['db_name']))
