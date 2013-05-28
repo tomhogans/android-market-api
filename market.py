@@ -78,8 +78,11 @@ class Market(object):
                 'User-Agent': 'Android-Market/2 (sapphire PLAT-RC33); gzip',
                 }
         httpreq = urllib2.Request(LOGIN_URL, urllib.urlencode(params), headers)
-        content = urllib2.urlopen(httpreq).read()
-        auth_results = dict([x.split('=') for x in content.splitlines()])
+        try:
+            content = urllib2.urlopen(httpreq).read()
+            auth_results = dict([x.split('=') for x in content.splitlines()])
+        except urllib2.HTTPError as e:
+            raise LoginException(e)
         self.android_id = android_id
         self.auth_token = auth_results['Auth']
         return self.auth_token
