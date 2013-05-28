@@ -2,23 +2,23 @@ from fabric.api import env, execute
 from fabric.operations import run, put
 
 env.roledefs= {'downloaders': [
-    'ec2-54-224-6-188.compute-1.amazonaws.com',
-    'ec2-54-225-3-120.compute-1.amazonaws.com',
-    'ec2-54-235-7-38.compute-1.amazonaws.com',
-    'ec2-54-224-95-214.compute-1.amazonaws.com',
-    'ec2-54-242-145-19.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-224-6-188.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-225-3-120.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-235-7-38.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-224-95-214.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-242-145-19.compute-1.amazonaws.com',
 
-    'ec2-50-16-144-159.compute-1.amazonaws.com',
-    'ec2-72-44-63-4.compute-1.amazonaws.com',
-    'ec2-23-22-16-53.compute-1.amazonaws.com',
-    'ec2-54-224-4-230.compute-1.amazonaws.com',
-    'ec2-184-72-77-246.compute-1.amazonaws.com',
+    'ubuntu@ec2-50-16-144-159.compute-1.amazonaws.com',
+    'ubuntu@ec2-72-44-63-4.compute-1.amazonaws.com',
+    'ubuntu@ec2-23-22-16-53.compute-1.amazonaws.com',
+    'ubuntu@ec2-54-224-4-230.compute-1.amazonaws.com',
+    'ubuntu@ec2-184-72-77-246.compute-1.amazonaws.com',
 
-    'ec2-184-73-25-166.compute-1.amazonaws.com',
-    'ec2-23-20-97-185.compute-1.amazonaws.com',
-    'ec2-107-21-140-131.compute-1.amazonaws.com',
-    'ec2-50-19-157-3.compute-1.amazonaws.com',
-    'ec2-204-236-202-93.compute-1.amazonaws.com',
+    'ubuntu@ec2-184-73-25-166.compute-1.amazonaws.com',
+    'ubuntu@ec2-23-20-97-185.compute-1.amazonaws.com',
+    'ubuntu@ec2-107-21-140-131.compute-1.amazonaws.com',
+    'ubuntu@ec2-50-19-157-3.compute-1.amazonaws.com',
+    'ubuntu@ec2-204-236-202-93.compute-1.amazonaws.com',
 
 ]}
 
