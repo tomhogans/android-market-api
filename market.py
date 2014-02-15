@@ -27,9 +27,37 @@ class Market(object):
         """ Constructor optionally accepts auth_token and account's associated
         android_id to continue a previously authenticated session.  Otherwise
         initialize with no parameters and use the login method. """
-        if auth_token and android_id:
-            self.auth_token = auth_token
-            self.android_id = android_id
+        self.auth_token = auth_token
+        self.android_id = android_id
+        # Set up urllib2 urlopener
+        self.proxy_handler = None
+        self.proxy_auth = None
+        self.__build_opener()
+
+    def __build_opener(self):
+        handlers = []
+        if self.proxy_handler:
+            handlers.append(self.proxy_handler)
+        if self.proxy_auth:
+            handlers.append(self.proxy_auth)
+        self.opener = urllib2.build_opener(*handlers)
+
+    def set_proxy(self, host, port, username=None, password=None):
+        proxy_addr = '{0}:{1}'.format(host, port)
+        proxy_protocols = {'http': proxy_addr, 'https': proxy_addr}
+        if not host:
+            self.proxy_handler = None
+            self.proxy_auth = None
+            return
+        if username:
+            passmgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            passmgr.add_password(None, 'http://{0}'.format(proxy_addr),
+                    username, password)
+            self.proxy_auth = urllib2.ProxyBasicAuthHandler(passmgr)
+        else:
+            self.proxy_auth = False
+        self.proxy_handler = urllib2.ProxyHandler(proxy_protocols)
+        self.__build_opener()
 
     def __prepare_request(self):
         if not self.auth_token:
@@ -61,7 +89,7 @@ class Market(object):
                 'Cookie': 'ANDROIDSECURE={}'.format(self.auth_token),
                 }
         httpreq = urllib2.Request(API_URL, urllib.urlencode(params), headers)
-        content = urllib2.urlopen(httpreq).read()
+        content = self.opener.open(httpreq).read()
         ungzipped_content = zlib.decompress(content, 16 + zlib.MAX_WBITS)
         response = market_pb2.Response.FromString(ungzipped_content)
         return response
@@ -79,7 +107,7 @@ class Market(object):
                 }
         httpreq = urllib2.Request(LOGIN_URL, urllib.urlencode(params), headers)
         try:
-            content = urllib2.urlopen(httpreq).read()
+            content = self.opener.open(httpreq).read()
             auth_results = dict([x.split('=') for x in content.splitlines()])
         except urllib2.HTTPError as e:
             raise LoginException(e)
@@ -109,7 +137,7 @@ class Market(object):
             asset = response.responsegroup[1].getAssetResponse.installasset[0]
         except urllib2.HTTPError, e:
             if e.code == 400:
-                raise SearchException("Package not found")
+                raise SearchException("Package unretrievable")
             elif e.code == 403:
                 raise NotAuthenticatedException("")
             elif e.code == 429:
@@ -117,7 +145,14 @@ class Market(object):
             else:
                 raise
         except IndexError, e:
-            raise SearchException("Package not found")
+            error_code = response.responsegroup[1].context.result
+            if error_code == 1:
+                error_msg = "Package not found"
+            elif error_code == 2:
+                error_msg = "Paid package"
+            else:
+                raise UnknownResponseException("Error code: %s" % error_code)
+            raise SearchException(error_msg)
 
         return {
                 'id': asset.assetId,
@@ -138,12 +173,11 @@ class Market(object):
         """ Accepts app_info response from get_app_info method and downloads
         to the path specified in save_as (or uses com.package.apk as default).
         Returns the save_as path where file was written when successful. """
-        opener = urllib2.build_opener()
-        opener.addheaders.append(('Cookie', '{}={}'.format(
+        self.opener.addheaders.append(('Cookie', '{}={}'.format(
             app_info['cookie_name'], app_info['cookie_value'])))
-        opener.addheaders.append(('User-Agent', 
+        self.opener.addheaders.append(('User-Agent',
             'Android-Market/2 (sapphire PLAT-RC33); gzip'))
-        f = opener.open(app_info['download_url'])
+        f = self.opener.open(app_info['download_url'])
         # If save_as path is not defined, save to local path using package name
         # as the filename.
         if not save_as:
